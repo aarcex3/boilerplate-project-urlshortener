@@ -31,41 +31,38 @@ function generateHash(url) {
     return hash.digest('hex').substring(0, 8);
 }
 
-// Route to shorten URL and return JSON response, or retrieve original URL
+function isURL(str) {
+    const urlRegex = /^(https?:\/\/)?(www\.)?([a-zA-Z0-9-]+\.){1,}[a-zA-Z]{2,}(:[0-9]{1,5})?(\/\S*)?$/;
+    return urlRegex.test(str);
+}
+
+
 app.post('/api/shorturl', (req, res) => {
     const { url } = req.body;
     if (!url) {
-        return res.status(400).json({
-            error: 'URL is required'
-        });
+        return res.status(400).json({ error: 'URL is required' });
     }
-    let clean_url = url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/)[1];
-    let hash = generateHash(clean_url);
+    if (!isURL(url)){
+        return res.json({ error: 'invalid url' })
+    }
+    let hash = generateHash(url);
     if (!urlMapping.hasOwnProperty(hash)){
-        urlMapping[hash] = clean_url;
+        urlMapping[hash] = url;
         const shortUrl = hash;
         return res.json({
             original_url: url,
             short_url: shortUrl
-        });
-    
-}
-    
-    
+        }); 
+    } 
 });
 
 app.get('/api/shorturl/:hash', (req, res) => {
     const { hash } = req.params;
     if (urlMapping.hasOwnProperty(hash)) {
         const original_url = urlMapping[hash]
-        return res.json({
-            original_url: original_url ,
-            short_url: hash
-        });
+        return res.redirect(original_url);
     } else {
-        return res.status(404).json({
-            error: 'Short URL not found'
-        });
+        return res.status(404).json({ error: 'Short URL not found' });
     }
 });
 
