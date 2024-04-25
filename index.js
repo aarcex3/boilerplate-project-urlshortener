@@ -53,7 +53,12 @@ app.post('/api/shorturl', (req, res) => {
             original_url: url,
             short_url: shortUrl
         }); 
-    } 
+    } else {
+        return res.json({
+            original_url: urlMapping[hash],
+            short_url: hash
+        }); 
+    }
 });
 
 app.get('/api/shorturl/:hash', (req, res) => {
